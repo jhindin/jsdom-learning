@@ -31,7 +31,7 @@ function fileResourceLoader(resource, callback)
                 response.on('data', (chunk) =>  body += chunk);
                 response.on('end', () => callback(undefined, body));
                 response.on('error', (err) => callback(err));
-            });
+            }).end();
         }
     } catch (err) {
         callback(err);
