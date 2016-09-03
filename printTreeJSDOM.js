@@ -6,11 +6,16 @@ var url = require('url');
 var fs = require('fs');
 var http = require('http');
 
+
+jsdom.defaultDocumentFeatures = {
+    FetchExternalResources: ["script", "frame", "iframe" ],
+    ProcessExternalResources: ["script", "frame", "iframe" ]
+};
+
 function onLoad(window)
 {
     nodePrinter.print(window.document.documentElement);
 }
-
 
 if (process.argv.length != 3) {
     console.log("Bad args");
@@ -20,18 +25,18 @@ if (process.argv.length != 3) {
 function fileResourceLoader(resource, callback)
 {
     try {
-        var pu = url.parse(resource.url);
-        if (pu.protocol == 'file:') {
-            fs.readFile(pu.path, 'utf8', callback);
-        } else if (resource.defaultFetch) {
-            resource.defaultFetch(resource, callback);
-        } else if (pu.protocol == 'http:' || pu.protocol == 'https:') {
+        console.log("Loading", resource.url.href);
+        if (resource.url.protocol == 'file:') {
+            fs.readFile(resource.url.path, 'utf8', callback);
+        } else if (resource.url.protocol == 'http:' || resource.url.protocol == 'https:') {
             var body ='';
-            http.request(pu, (response) => {
+            http.request(resource.url, (response) => {
                 response.on('data', (chunk) =>  body += chunk);
                 response.on('end', () => callback(undefined, body));
                 response.on('error', (err) => callback(err));
             }).end();
+        } else {
+            callback(new Error("Unsupported protocol " + resource.url.protocol));
         }
     } catch (err) {
         callback(err);
@@ -39,14 +44,16 @@ function fileResourceLoader(resource, callback)
 }
 
 var doc = jsdom.jsdom(undefined, {
-    created: (err, view) => { if (err) { console.log("created: ", err); process.exit(-1); };},
-    resourceLoader: fileResourceLoader
+    created: (err, view) => { if (err) { console.log("created: ", err); process.exit(-1) }},
+    resourceLoader: fileResourceLoader,
 });
 
 var window = doc.defaultView;
 
 jsdom.changeURL(window, process.argv[2]);
-fileResourceLoader({url: process.argv[2], baseUrl: process.argv[2]}, (err, body) => {
+
+url = url.parse(process.argv[2])
+fileResourceLoader({url: url, baseUrl: process.argv[2]}, (err, body) => {
     if (err)
         throw err;
     window.document.write(body);
