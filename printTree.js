@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var jsdom = require("jsdom");
-var nodePrinter = require("./nodePrinter.js")
+var nodePrinter = require("./nodePrinter")
 
 function onLoad(err, window)
 {
