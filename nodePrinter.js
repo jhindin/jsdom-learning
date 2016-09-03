@@ -9,22 +9,27 @@ function printAttributes(element, stream)
     }
 }
 
-function printRecursively(element, stream, level)
+function printOffset(stream, level)
 {
     for (var i = 0; i < level; i++)
         stream.write(' ');
+}
 
+function printRecursively(element, stream, level)
+{
     if (element.nodeType == 3) { // Text
-        stream.write(element.nodeValue + "\n");
-        return;
+        var trimmed = element.nodeValue.replace(/\s+/g, "");
+        if (trimmed.length > 0) {
+            printOffset(stream, level);
+            stream.write(trimmed + "\n");
+        }
     }
 
     if (element.nodeType != 1) // Element
         return;
 
-
+    printOffset(stream, level)
     if (element.childNodes && element.childNodes.length != 0) {
-
         stream.write('<' + element.nodeName);
         printAttributes(element, stream);
         stream.write('>\n');
