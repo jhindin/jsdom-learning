@@ -5,6 +5,26 @@ var nodePrinter = require("./nodePrinter.js")
 var url = require('url');
 var fs = require('fs');
 var http = require('http');
+var cliParser=require('minimist')
+
+function optUnknown(a)
+{
+    c = a.charAt(0);
+    if (c == '-') {
+	console.log("Unknown options", a)
+	return false;
+    }
+    return true;
+}
+
+parsedArgs = cliParser(process.argv.slice(2), {boolean: ["e", "h"], stopEarly: true, unknown: optUnknown })
+help="[-e] url";
+
+
+if (parsedArgs.h || parsedArgs.help) {
+    console.log(help);
+    process.exit(0);
+}
 
 
 jsdom.defaultDocumentFeatures = {
@@ -17,7 +37,7 @@ function onLoad(window)
     nodePrinter.print(window.document.documentElement);
 }
 
-if (process.argv.length != 3) {
+if (parsedArgs._.length != 1) {
     console.log("Bad args");
     process.exit(-1);
 }
@@ -43,19 +63,38 @@ function fileResourceLoader(resource, callback)
     }
 }
 
-var doc = jsdom.jsdom(undefined, {
-    created: (err, view) => { if (err) { console.log("created: ", err); process.exit(-1) }},
-    resourceLoader: fileResourceLoader,
-});
+var virtualConsole = jsdom.createVirtualConsole()
+virtualConsole.on("jsdomError", (error) => console.log("JSDOM ERROR:", error));
+virtualConsole.on("log", (msg) => console.log("JSDOM CONSOLE.LOG:", msg));
 
-var window = doc.defaultView;
+if (parsedArgs.e) {
+    jsdom.env(parsedArgs._[0],
+              {
+                  virtualConsole: virtualConsole
+              },
+              function (err, window) {
+                  if (err) {
+                      console.log("Error:", err);
+                  } else {
+                      nodePrinter.print(window.document.documentElement);
+                  }
+              });
+} else {
+    var doc = jsdom.jsdom(undefined, {
+        created: (err, view) => { if (err) { console.log("created: ", err); process.exit(-1) }},
+        resourceLoader: fileResourceLoader,
+        virtualConsole: virtualConsole
+    });
 
-jsdom.changeURL(window, process.argv[2]);
+    var window = doc.defaultView;
 
-url = url.parse(process.argv[2])
-fileResourceLoader({url: url, baseUrl: process.argv[2]}, (err, body) => {
-    if (err)
-        throw err;
-    window.document.write(body);
-    onLoad(window);
-});
+    jsdom.changeURL(window, parsedArgs._[0]);
+
+    url = url.parse(parsedArgs._[0])
+    fileResourceLoader({url: url, baseUrl: parsedArgs._[0]}, (err, body) => {
+        if (err)
+            throw err;
+        window.document.write(body);
+        onLoad(window);
+    });
+}
