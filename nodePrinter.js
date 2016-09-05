@@ -18,7 +18,7 @@ function printOffset(stream, level)
 function printRecursively(element, stream, level)
 {
     if (element.nodeType == 3) { // Text
-        var trimmed = element.nodeValue.replace(/^\s+.*\s+$/g, "");
+        var trimmed = element.nodeValue.replace(/\s+/g, " ");
         if (trimmed.length > 0) {
             printOffset(stream, level);
             stream.write(trimmed + "\n");
