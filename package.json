@@ -1,0 +1,25 @@
+{
+  "name": "jsdom-learning",
+  "version": "1.0.0",
+  "description": "JSDOM learning",
+  "main": "nodePrinter.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jhindin/jsdom-learning.git"
+  },
+  "keywords": [
+    "JSDOM"
+  ],
+  "author": "Joseph Hindin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jhindin/jsdom-learning/issues"
+  },
+  "homepage": "https://github.com/jhindin/jsdom-learning#readme",
+  "dependencies": {
+    "jsdom": "^9.9.1"
+  }
+}
